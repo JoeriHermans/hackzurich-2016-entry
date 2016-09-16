@@ -12,31 +12,6 @@ import numpy as np
 
 import json
 
-## BEGIN Event definitions. ####################################################
-
-class Event(object):
-
-    def __init__(self, timestamp, expiration_time):
-        self.timestamp = timestamp
-        self.expiration_time = expiration_time
-        self.expiration_timestamp = timestamp + expiration_time
-
-    def get_timestamp(self):
-        return self.timestamp
-
-    def get_expiration_duration(self):
-        return self.expiration_duration
-
-    def get_expiration_timestamp(self):
-        return self.expiration_timestamp
-
-    def expired(self):
-        timestamp = time.time()
-
-        return timestamp > self.expiration_timestamp
-
-## END Event definitions. ######################################################
-
 ## BEGIN Event Listeners. ######################################################
 
 class EventListener(object):
@@ -146,12 +121,13 @@ class Application(object):
     def purge_events(self):
         while True:
             with self.mutex_events:
+                timestamp = time.time()
                 num_events = len(self.events)
                 if num_events > 0:
                     # Remove the elements which are expired.
-                    for i in range(num_events, -1, -1):
+                    for i in range(num_events - 1, -1, -1):
                         event = self.events[i]
-                        if event.expired():
+                        if event["expiration_timestamp"] < timestamp:
                             del self.events[i]
             # Wait until the next purge.
             time.sleep(10)
