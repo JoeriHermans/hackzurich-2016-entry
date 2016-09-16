@@ -111,3 +111,15 @@ class Application(object):
         ## END REST Routes. ####################################################
 
         app.run(host='0.0.0.0', threaded=True, use_reloader=False)
+
+
+## BEGIN Application code. #####################################################
+
+def main():
+    application = Application()
+    application.run()
+
+## END Application code. #######################################################
+
+if __name__ == '__main__':
+    main()
