@@ -69,8 +69,8 @@ class Application(object):
         pass
 
     def run(self):
-        self.thread_purge = threading.Thread(target=self.pruge_events)
-        self.thread_event_consumers = threading.Thread(target=self.consume_events)
+        self.thread_purge = threading.Thread(target=self.pruge_events).start()
+        self.thread_event_consumers = threading.Thread(target=self.consume_events).start()
         self.service()
 
     def get_car(id):
