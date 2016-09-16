@@ -4,11 +4,13 @@ from threading import Lock
 
 import threading
 
-import Queue
+from Queue import Queue
 
 import time
 
 import json
+
+## BEGIN Event definitions. ####################################################
 
 class Event(object):
 
@@ -31,6 +33,17 @@ class Event(object):
 
         return timestamp > self.expiration_timestamp
 
+## END Event definitions. ######################################################
+
+## BEGIN Event Listeners. ######################################################
+
+class EventListener(object):
+
+    def handle(self):
+        raise NotImplementedError
+
+## END Event Listeners. ########################################################
+
 class Application(object):
 
     def __init__(self):
@@ -43,6 +56,10 @@ class Application(object):
         self.mutex_event_listeners = Lock()
         self.thread_purge = None
         self.thread_event_consumers = None
+
+    def add_car(self, car_id):
+        with self.mutex_cars:
+            self.cars[car_id] = {}
 
     def add_event_listener(self, event_listener):
         with self.mutex_event_listeners:
@@ -57,23 +74,31 @@ class Application(object):
         while True:
             with self.mutex_events:
                 num_events = len(self.events)
-                # Remove the elements which are expired.
-                for i in range(num_events, -1, -1, -1):
-                    event = self.events[i]
-                    if event.expired():
-                        del self.events[i]
+                if num_events > 0:
+                    # Remove the elements which are expired.
+                    for i in range(num_events, -1, -1):
+                        event = self.events[i]
+                        if event.expired():
+                            del self.events[i]
             # Wait until the next purge.
             time.sleep(10)
 
     def consume_events(self):
-        pass
+        while True:
+            while not self.update_queue.empty():
+                update = self.update_queue.get()
+                with self.mutex_event_listeners:
+                    # Iterate through the event listeners.
+                    for listener in self.event_listeners:
+                        pass
+            time.sleep(1)
 
     def run(self):
-        self.thread_purge = threading.Thread(target=self.pruge_events).start()
+        self.thread_purge = threading.Thread(target=self.purge_events).start()
         self.thread_event_consumers = threading.Thread(target=self.consume_events).start()
         self.service()
 
-    def get_car(id):
+    def get_car(self, id):
         with self.mutex_cars:
             if id in self.cars:
                 car = self.cars[id]
@@ -117,6 +142,9 @@ class Application(object):
 
 def main():
     application = Application()
+    application.add_car(0)
+    application.add_car(1)
+    application.add_car(2)
     application.run()
 
 ## END Application code. #######################################################
