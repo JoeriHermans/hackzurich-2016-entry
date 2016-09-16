@@ -19,7 +19,43 @@ class EventListener(object):
     def handle(self, update):
         raise NotImplementedError
 
-class CrashEventListener(object):
+class EmergencyServiceEventListener(EventListener):
+
+    def __init__(self, cars, cars_mutex, events, events_mutex, detection_range=1.0, event_timeout=180):
+        self.detection_range = detection_range
+        self.event_timeout = event_timeout
+        self.cars = cars
+        self.mutex_cars = cars_mutex
+        self.events = events
+        self.mutex_events = events_mutex
+
+    def is_emergency_vehicle(self, update):
+        vehicle_type = update["car_type"]
+
+        return int(vehicle_type) == 1
+
+    def in_emergency(self, update):
+        in_emergency = update["in_emergency"]
+
+        return int(in_emergency)
+
+    def not_in_events(self, update):
+        event = {}
+
+        # TODO Implement.
+
+        return event
+
+    def handle(self, update):
+        event = None
+        if self.is_emergency_vehicle(update) and
+           self.in_emergency(update) and not
+           self.not_in_events(update):
+           event = self.create_event(update)
+
+        return event
+
+class CrashEventListener(EventListener):
 
     def __init__(self, crash_tolerance=4,
                  event_timeout=20):
@@ -53,7 +89,6 @@ class CrashEventListener(object):
 
         return event
 
-
     def analyse_update(self, update):
         # Fetch the parameters from the sensor readings.
         a_x = float(update["sensors"]["acceleration_x"])
@@ -74,7 +109,6 @@ class CrashEventListener(object):
             event = None
 
         return event
-
 
     def handle(self, update):
         event = None
