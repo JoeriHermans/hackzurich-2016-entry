@@ -40,6 +40,19 @@ class EmergencyServiceEventListener(EventListener):
         return int(in_emergency)
 
     def not_in_events(self, update):
+        in_events = False
+        car_id = int(update["car_id"])
+        with self.mutex_events:
+            for event in self.events:
+                event_car_id = int(event["car_id"])
+                event_type = event["event_type"]
+                if event_type == "emergency_alert" and event_car_id == car_id:
+                    in_events = True
+                    break
+
+        return not in_events
+
+    def create_event(self, update):
         event = {}
 
         # TODO Implement.
