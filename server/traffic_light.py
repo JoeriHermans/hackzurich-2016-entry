@@ -71,6 +71,9 @@ def send_state():
     data["time"] = t
     data["states"] = [data_a, data_b]
 
-    return str(data)
+    resp = Response(json.dumps(data))
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+
+    return resp
 
 app.run(host='0.0.0.0', port=port, threaded=True, use_reloader=True)

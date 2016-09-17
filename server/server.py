@@ -73,7 +73,7 @@ class EmergencyTrafficLightStopEventListener(EventListener):
 
         return traffic_light
 
-    def create_event(self, update, traffic_lights):
+    def create_event(self, update, traffic_light):
         event = {}
 
         event_type = "emergency_traffic_light_stop"
@@ -91,13 +91,16 @@ class EmergencyTrafficLightStopEventListener(EventListener):
         traffic_lights = self.get_traffic_lights_on_route(update)
         if len(traffic_lights) > 0:
             traffic_light = self.get_closest_traffic_light(update, traffic_lights)
-            distance_to_intersection = traffic_light.distance_to(update)
-            speed = float(update["sensors"]["speed"])
-            stopping_distance = (speed * speed) / (2 * 0.7 * 9.81)
-            # Convert to Kilometers
-            stopping_distance /= 1000
-            if stopping_distance >= (distance_to_intersection + 0.5):
-                event = self.create_event(update, traffic_light)
+            if traffic_light.is_red(update):
+                distance_to_intersection = traffic_light.distance_to(update)
+                speed = float(update["sensors"]["speed"])
+                stopping_distance = (speed * speed) / (2 * 0.7 * 9.81)
+                # Convert to Kilometers
+                stopping_distance /= 1000
+                if stopping_distance >= (distance_to_intersection + 0.5):
+                    event = self.create_event(update, traffic_light)
+
+        print(event)
 
         return event
 
@@ -216,8 +219,6 @@ class CrashEventListener(EventListener):
         if self.contains_arguments(update):
             event = self.analyse_update(update)
 
-        print(event)
-
         return event
 
 
@@ -253,22 +254,24 @@ class SmartTrafficLight(object):
         return distance(a, car['sensors'])
 
     def is_red(self, car):
-        is_red = True
+        is_red = False
         data = self.get_information()
         states = data["states"]
         for state in states:
             if state["road"] == car["road"]:
                 is_red = (state["state"] == "red")
+                break
 
         return is_red
 
     def is_green(self, car):
-        is_green = True
+        is_green = False
         data = self.get_information()
         states = data["states"]
         for state in states:
             if state["road"] == car["road"]:
                 is_green = (state["state"] == "green")
+                break
 
         return is_green
 
@@ -433,7 +436,6 @@ class Application(object):
             data["car"] = car
             data["other_cars"] = other_cars
             data["events"] = events
-            print(events)
             # Prepare the response.
             resp = Response(json.dumps(data))
             resp.headers['Access-Control-Allow-Origin'] = '*'
