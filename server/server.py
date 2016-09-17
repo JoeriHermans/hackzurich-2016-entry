@@ -563,7 +563,7 @@ def main():
                                                               smart_infrastructure=application.smart_infrastructure,
                                                               smart_infra_mutex=application.mutex_smart_infra))
     # Add smart infrastructure.
-    traffic_light = SmartTrafficLight(id=1, latitude=46.234525, longitude=6.0482579, route_a="Route A Einstein", route_b="Route Rutherford", url="http://localhost:5001/state")
+    traffic_light = SmartTrafficLight(id=1, latitude=47.389448, longitude=8.516312, route_a="Route A Einstein", route_b="Route Rutherford", url="http://localhost:5001/state")
     application.add_smart_infrastructure(traffic_light)
     # Run the application.
     application.run()

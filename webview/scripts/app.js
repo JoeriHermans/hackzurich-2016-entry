@@ -82,7 +82,7 @@ function renderEvent (type, message) {
 var done = false;
 
 var refreshInterval = setInterval(function () {
-  $.get('http://172.31.4.246:5000/stream/' + myId, function(data) {
+  $.get('http://snf-648103.vm.okeanos.grnet.gr/stream/' + myId, function(data) {
     data = JSON.parse(data);
     refreshInfo(data);
 

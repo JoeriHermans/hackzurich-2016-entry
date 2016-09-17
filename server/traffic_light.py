@@ -10,8 +10,8 @@ from math import cos, asin, sqrt
 
 ## BEGIN Traffic light parameters. #############################################
 
-latitude = 46.234518
-longitude = 6.048213
+latitude = 47.389448
+longitude = 8.516312
 time_interval = 30
 red_a = False
 route_a = "Route A Einstein"
