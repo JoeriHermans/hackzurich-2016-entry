@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context="com.hackzurich.carapp.carapphackzurich.MainActivity">
+
+    <GridLayout
+        android:id="@+id/GRD"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="2"
+        android:orientation="horizontal"
+        android:rowOrderPreserved="true"
+        android:useDefaultMargins="true">
+
+        <Button
+            android:id="@+id/btCarID"
+            android:onClick="setCarID"
+            android:text="@string/carid" />
+        <TextView
+            android:id="@+id/tvCarID"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:id="@+id/btCarType"
+            android:onClick="setCarType"
+            android:text="@string/cartype" />
+        <TextView
+            android:id="@+id/tvCarType"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:id="@+id/btInEmergency"
+            android:onClick="setInEmergency"
+            android:text="@string/Emergency" />
+
+        <TextView
+            android:id="@+id/tvEmergenecy"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:id="@+id/btStarSensorService"
+            android:onClick="StarSensorService"
+            android:text="@string/StarSensorService" />
+
+        <Button
+            android:id="@+id/btStopSensorService"
+            android:onClick="StopSensorService"
+            android:text="@string/StopSensorService" />
+
+        <Button
+            android:id="@+id/btWebView"
+            android:onClick="startWebview"
+            android:text="@string/WebView" />
+
+        <Button
+            android:id="@+id/btDisplaySensors"
+            android:onClick="showSensors"
+            android:text="@string/DisplaySensors" />
+    </GridLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/GRD">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:id="@+id/tvLogArea"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </ScrollView>
+    </LinearLayout>
+</RelativeLayout>
