@@ -71,9 +71,7 @@ class EmergencyServiceEventListener(EventListener):
 
     def handle(self, update):
         event = None
-        if self.is_emergency_vehicle(update) and
-           self.in_emergency(update) and not
-           self.not_in_events(update):
+        if self.is_emergency_vehicle(update) and self.in_emergency(update) and self.not_in_events(update):
            event = self.create_event(update)
 
         return event
@@ -96,7 +94,7 @@ class CrashEventListener(EventListener):
     def create_crash_event(self, update, magnitude):
         # Create the attributes which are required to describe the event.
         event_type = "crash"
-        timestamp = float(update["update_timestamp"])
+        timestamp = float(update["timestamp"])
         expiration_timestamp = timestamp + self.event_timeout
         car_id = int(update["car_id"])
         latitude = float(update["sensors"]["latitude"])
@@ -256,6 +254,10 @@ def main():
     application.add_car(2) # Joeri
     # Add event listeners.
     application.add_event_listener(CrashEventListener(crash_tolerance=4))
+    application.add_event_listener(EmergencyServiceEventListener(cars=application.cars,
+                                                                 cars_mutex=application.mutex_cars,
+                                                                 events=application.events,
+                                                                 events_mutex=application.mutex_events))
     # Run the application.
     application.run()
 
