@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>#smart-cars</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" href="styles/styles.css">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400" rel="stylesheet">
+  </head>
+  <body>
+    <div class="app-wrapper">
+      <div id="map" class="map-wrapper"></div>
+      <div class="info-panel-wrapper">
+        <div class="prop id">ID : <span></span></div>
+        <div class="prop speed">Speed : <span></span> km/h</div>
+
+        <div class="prop type">Type : <span></span></div>
+        <div class="prop acceleration">Acc : <span></span></div>
+
+        <div class="events"></div>
+      </div>
+    </div>
+
+
+    <script   src="https://code.jquery.com/jquery-3.1.0.min.js"   integrity="sha256-cCueBR6CsyA4/9szpPfrX3s49M9vUU5BgtiJj06wt/s=" crossorigin="anonymous"></script>
+    <script src="scripts/app.js"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBhJ6qg-_C6_zS0JLCQM5Bp17QhDhSZR6E&callback=initMap"
+            async defer></script>
+  </body>
+</html>
