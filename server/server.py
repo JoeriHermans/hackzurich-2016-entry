@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, Response
 
 from threading import Lock
 
@@ -282,8 +282,11 @@ class Application(object):
             data["car"] = car
             data["other_cars"] = other_cars
             data["events"] = events
+            # Prepare the response.
+            resp = Response(json.dumps(data))
+            resp.headers['Access-Control-Allow-Origin'] = '*'
 
-            return json.dumps(data)
+            return resp
 
         ## END REST Routes. ####################################################
 
