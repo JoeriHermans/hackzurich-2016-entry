@@ -386,10 +386,40 @@ class Application(object):
         with self.mutex_events:
             for e in self.events:
                 event_car = self.get_car(e["car_id"])
-                if distance(self.get_car(e["car_id"])["sensors"], car["sensors"]) <= 0.2:
+                if distance(event_car["sensors"], car["sensors"]) <= 0.2:
                     events.append(e)
 
         return events
+
+    def fetch_si_status(self, infra, car):
+        car_road = car["road"]
+        is_red = infra.is_red(car)
+        lat = infra.latitude
+        lon = infra.longitude
+        if is_red:
+            state = "red"
+        else:
+            state = "green"
+        status = {}
+        status['longitude'] = lon
+        status['latitude'] = lat
+        status['state'] = state
+
+        return status
+
+    def fetch_smart_infrastructure(self, car):
+        infrastructure = []
+
+        with self.mutex_smart_infra:
+            for infra in self.smart_infrastructure:
+                location = {}
+                location["longitude"] = infra.longitude
+                location["latitude"] = infra.latitude
+                d = distance(location, car["sensors"])
+                if d <= 0.2 and infra.on_route(car):
+                    infrastructure.append(self.fetch_si_status(infra, car))
+
+        return infrastructure
 
     def update_metadata(self, data):
         lat = float(data["sensors"]["latitude"])
@@ -429,11 +459,13 @@ class Application(object):
             car = self.get_car(car_id)
             other_cars = self.fetch_other_cars(car)
             events = self.fetch_events(car)
+            infrastructure = self.fetch_smart_infrastructure(car)
             # Prepare the structure to be JSONified.
             data = {}
             data["car"] = car
             data["other_cars"] = other_cars
             data["events"] = events
+            data["smart_infrastructure"] = infrastructure
             # Prepare the response.
             resp = Response(json.dumps(data))
             resp.headers['Access-Control-Allow-Origin'] = '*'
