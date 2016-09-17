@@ -552,7 +552,7 @@ def main():
     application.add_car(1) # Przemek
     application.add_car(2) # Joeri
     # Add event listeners.
-    application.add_event_listener(CrashEventListener(crash_tolerance=4))
+    application.add_event_listener(CrashEventListener(crash_tolerance=50))
     application.add_event_listener(EmergencyServiceEventListener(cars=application.cars,
                                                                  cars_mutex=application.mutex_cars,
                                                                  events=application.events,
