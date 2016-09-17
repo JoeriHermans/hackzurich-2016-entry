@@ -52,7 +52,7 @@ var events = {
  */
 function refreshInfo (info) {
   $('.info-panel-wrapper .id span').html(info.car.car_id);
-  $('.info-panel-wrapper .speed span').html(info.car.sensors.speed);
+  $('.info-panel-wrapper .speed span').html(info.car.sensors.speed.toFixed(1));
   $('.info-panel-wrapper .type span').html(carTypes[info.car.car_type]);
   $('.info-panel-wrapper .acceleration span').html(info.car.sensors.acceleration_x.toFixed(0)/100);
 
