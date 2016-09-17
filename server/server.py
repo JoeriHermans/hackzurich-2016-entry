@@ -35,6 +35,69 @@ class EventListener(object):
     def handle(self, update):
         raise NotImplementedError
 
+class EmergencyTrafficLightStopEventListener(EventListener):
+
+    def __init__(self, cars, cars_mutex, events, events_mutex, smart_infrastructure, smart_infra_mutex, detection_range=1.0, event_timeout=30):
+        self.cars = cars
+        self.mutex_cars = cars
+        self.events = events
+        self.mutex_events = events_mutex
+        self.smart_infrastructure = smart_infrastructure
+        self.mutex_smart_infra = smart_infra_mutex
+        self.detection_range = detection_range
+        self.event_timeout = event_timeout
+
+    def get_traffic_lights_on_route(self, update):
+        traffic_lights = []
+        with self.mutex_smart_infra:
+            for infra in self.smart_infrastructure:
+                # Compute the distance to the smart infrastructure.
+                d = infra.distance_to(update)
+                # Check if the type is a traffic light.
+                if infra.get_type() == "traffic_light" and d <= 0.5 and infra.on_route(update):
+                    traffic_lights.append(infra)
+
+        return traffic_lights
+
+    def get_closest_traffic_light(self, car, traffic_lights):
+        traffic_light = traffic_lights[0]
+        min_distance = traffic_light.distance_to(car)
+        num_traffic_lights = len(traffic_lights)
+        # Iterate through the rest.
+        for i in range(1, num_traffic_lights):
+            tf = traffic_lights[i]
+            d = tf.distance_to(car)
+            if d < min_distance:
+                min_distance = d
+                traffic_light = tf
+
+        return traffic_light
+
+    def create_event(self, update, traffic_lights):
+        event = {}
+
+        event_type = "emergency_traffic_light_stop"
+        # TODO Implement.
+
+        return event
+
+    def handle(self, update):
+        event = None
+
+        traffic_lights = self.get_traffic_lights_on_route(update)
+        if len(traffic_lights) > 0:
+            traffic_light = self.get_closest_traffic_light(update, traffic_lights)
+            distance_to_intersection = traffic_light.distance_to(update)
+            speed = float(update["sensors"]["speed"])
+            stopping_distance = (speed * speed) / (2 * 0.7 * 9.81)
+            # Convert to Kilometers
+            stopping_distance /= 1000
+            print(distance_to_intersection + " - " + stopping_distance)
+            if stopping_distance < (distance_to_intersection + 0.5):
+                event = self.create_event(update, traffic_light)
+
+        return event
+
 class EmergencyServiceEventListener(EventListener):
 
     def __init__(self, cars, cars_mutex, events, events_mutex, detection_range=1.0, event_timeout=180):
@@ -150,12 +213,79 @@ class CrashEventListener(EventListener):
         if self.contains_arguments(update):
             event = self.analyse_update(update)
 
+        print(event)
+
         return event
 
 
 ## END Event Listeners. ########################################################
 
 ## BEGIN Smart Infrastructure. #################################################
+
+class SmartInfrastructure(object):
+
+    def __init__(self, id, type, latitude, longitude):
+        self.id = id
+        self.type = type
+        self.latitude = latitude
+        self.longitute = longitude
+
+
+
+
+class SmartTrafficLight(SmartInfrastructure):
+
+    def __init__(self, id, latitude, longitude, route_a, route_b, url):
+        super(SmartTrafficLight, self).__init__(id=id, type="traffic_light", latitude=latitude, longitude=longitude)
+        self.route_a = route_a
+        self.route_b = route_b
+        self.url = url
+        self.id = id
+        self.type = type
+        self.latitude = latitude
+        self.longitude = longitude
+
+    def get_information(self):
+        r = requests.get(self.url)
+        data = r.json()
+
+        return data
+
+    def get_type(self):
+        return self.type
+
+    def distance_to(self, car):
+        a = {}
+        a["longitude"] = self.longitude
+        a["latitude"] = self.latitude
+
+        return distance(a, car)
+
+    def is_red(self, car):
+        is_red = True
+        data = self.get_information()
+        states = data["states"]
+        for state in states:
+            if state["road"] == car["road"]:
+                is_red = (state["state"] == "red")
+
+        return is_red
+
+    def is_green(self, car):
+        is_green = True
+        data = self.get_information()
+        states = data["states"]
+        for state in states:
+            if state["road"] == car["road"]:
+                is_green = (state["state"] == "green")
+
+        return is_green
+
+    def on_route(self, car):
+        route = car["route"]
+
+        return self.route_a == route or self.route_b == route
+
 ## END Smart Infrastructure. ###################################################
 
 class Application(object):
@@ -165,6 +295,8 @@ class Application(object):
         self.update_queue = Queue()
         self.events = []
         self.event_listeners = []
+        self.smart_infrastructure = []
+        self.mutex_smart_infra = Lock()
         self.mutex_cars = Lock()
         self.mutex_events = Lock()
         self.mutex_event_listeners = Lock()
@@ -177,17 +309,23 @@ class Application(object):
             sensors["latitude"] = 0
             sensors["longitude"] = 0
             sensors["speed"] = 0
+            sensors["heading"] = 0
             c = {}
             c["car_id"] = int(car_id)
             c["car_type"] = 0
             c["in_emergency"] = 0
             c["timestamp"] = 0
+            c["road"] = "Not available"
             c["sensors"] = sensors
             self.cars[car_id] = c
 
     def add_event(self, event):
         with self.mutex_events:
             self.events.append(event)
+
+    def add_smart_infrastructure(self, infrastructure):
+        with self.mutex_smart_infra:
+            self.smart_infrastructure.append(infrastructure)
 
     def add_event_listener(self, event_listener):
         with self.mutex_event_listeners:
@@ -257,7 +395,7 @@ class Application(object):
             for e in self.events:
                 event_car = self.get_car(e["car_id"])
                 if e["car_id"] != car["car_id"] and\
-                   distance(self.get_car(e["car_id"])["sensors"], car["sensors"]) <= 0.2:
+                   distance(self.get_car(e["car_id"])["sensors"], car["sensors"]) <= 1:
                     events.append(e)
 
         return events
@@ -330,6 +468,15 @@ def main():
                                                                  cars_mutex=application.mutex_cars,
                                                                  events=application.events,
                                                                  events_mutex=application.mutex_events))
+    application.add_event_listener(EmergencyTrafficLightStopEventListener(cars=application.cars,
+                                                              cars_mutex=application.mutex_cars,
+                                                              events=application.events,
+                                                              events_mutex=application.mutex_events,
+                                                              smart_infrastructure=application.smart_infrastructure,
+                                                              smart_infra_mutex=application.mutex_smart_infra))
+    # Add smart infrastructure.
+    traffic_light = SmartTrafficLight(id=1, latitude=46.234525, longitude=6.0482579, route_a="Route A Einstein", route_b="Route Rutherford", url="http://localhost:5001/state")
+    application.add_smart_infrastructure(traffic_light)
     # Run the application.
     application.run()
 
