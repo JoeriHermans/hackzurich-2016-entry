@@ -56,10 +56,6 @@ public class MainActivity extends Activity {
         tvInEmergency = (TextView) findViewById(R.id.tvEmergenecy);
         tvLogArea = (TextView) findViewById(R.id.tvLogArea);
 
-        tvCarID.setText("0");
-        tvCarType.setText("0");
-        tvLogArea.setText("Test text");
-        tvInEmergency.setText("0");
     }
 
     private BroadcastReceiver sensorsSReceiver = new BroadcastReceiver() {
@@ -72,9 +68,10 @@ public class MainActivity extends Activity {
     @Override
     public void onResume() {
         super.onResume();
-//        tvCarID.setText("0");
-//        tvCarType.setText("0");
-//        tvLogArea.setText("Test text");
+        tvCarID.setText("0");
+        tvCarType.setText("0");
+        tvInEmergency.setText("0");
+        tvLogArea.setText("Test text");
     }
 
     @Override
@@ -135,9 +132,9 @@ public class MainActivity extends Activity {
     }
 
     public void StarSensorService(View view) {
-        backgroundIntent.putExtra("CarID", tvCarID.getText());
-        backgroundIntent.putExtra("CarType", tvCarType.getText());
-        backgroundIntent.putExtra("InEmergency", tvInEmergency.getText());
+        backgroundIntent.putExtra("CarID", tvCarID.getText().toString());
+        backgroundIntent.putExtra("CarType", tvCarType.getText().toString());
+        backgroundIntent.putExtra("InEmergency", tvInEmergency.getText().toString());
         startService(backgroundIntent);
         registerReceiver(sensorsSReceiver, new IntentFilter(SensorsService.BROADCAST_ACTION));
     }
@@ -175,6 +172,5 @@ public class MainActivity extends Activity {
             tvInEmergency.setText("1");
         else
             tvInEmergency.setText("0");
-        backgroundIntent.putExtra("InEmergency", tvInEmergency.getText());
     }
 }

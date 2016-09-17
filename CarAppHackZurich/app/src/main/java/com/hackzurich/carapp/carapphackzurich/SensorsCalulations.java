@@ -9,10 +9,10 @@ import java.lang.Math;
 
 public class SensorsCalulations {
 
-    private double[] gravity;
-    private double[] linear_acceleration;
+    private float[] gravity;
+    private float[] linear_acceleration;
     private static final int INT_ROUNDVAL = 100;
-    private static final double DOUBLE_ROUNDVAL = 100.0;
+    private static final float DOUBLE_ROUNDVAL = 100;
     // Create a constant to convert nanoseconds to seconds.
     private static final float NS2S = 1.0f / 1000000000.0f;
     private float[] deltaRotationVector;
@@ -22,33 +22,31 @@ public class SensorsCalulations {
 
     public SensorsCalulations(SensorManager sensorManager){
         this.sensorManager = sensorManager;
-        gravity = new double[3];
-        linear_acceleration = new double[3];
+        gravity = new float[3];
+        linear_acceleration = new float[3];
         deltaRotationVector = new float[4];
     }
 
-    public String Calculate_Accel(SensorEvent event){
+    public float [] Calculate_Accel(SensorEvent event){
 
         final double alpha = 0.8;
         // Isolate the force of gravity with the low-pass filter.
-        gravity[0] = alpha * gravity[0] + (1 - alpha) * event.values[0];
-        gravity[1] = alpha * gravity[1] + (1 - alpha) * event.values[1];
-        gravity[2] = alpha * gravity[2] + (1 - alpha) * event.values[2];
+        gravity[0] =(float) (alpha * gravity[0] + (1 - alpha) * event.values[0]);
+        gravity[1] = (float) (alpha * gravity[1] + (1 - alpha) * event.values[1]);
+        gravity[2] = (float) (alpha * gravity[2] + (1 - alpha) * event.values[2]);
 
         // Remove the gravity contribution with the high-pass filter.
         linear_acceleration[0] = event.values[0] - gravity[0];
         linear_acceleration[1] = event.values[1] - gravity[1];
         linear_acceleration[2] = event.values[2] - gravity[2];
 
-        String disp = event.sensor.getName() + "\n";
-        disp += "X: " + Double.toString(Math.round(linear_acceleration[0] * INT_ROUNDVAL) / DOUBLE_ROUNDVAL) + " m/s²" + "\n"
-                + "Y: " + Double.toString(Math.round(linear_acceleration[1]* INT_ROUNDVAL) / DOUBLE_ROUNDVAL) + " m/s²" + "\n"
-                + "Z: " + Double.toString(Math.round(linear_acceleration[2]* INT_ROUNDVAL) / DOUBLE_ROUNDVAL) + " m/s²";
-
-        return disp;
+        linear_acceleration[0] = (float) Math.round(linear_acceleration[0] * INT_ROUNDVAL) / DOUBLE_ROUNDVAL;
+        linear_acceleration[1] = (float) Math.round(linear_acceleration[1] * INT_ROUNDVAL) / DOUBLE_ROUNDVAL;
+        linear_acceleration[2] = (float) Math.round(linear_acceleration[2] * INT_ROUNDVAL) / DOUBLE_ROUNDVAL;
+        return linear_acceleration;
     }
 
-    public String Calculate_Gyro(SensorEvent event) {
+    public float [] Calculate_Gyro(SensorEvent event) {
 
         // This timestep's delta rotation to be multiplied by the current rotation
         // after computing it from the gyro sample data.
@@ -65,6 +63,7 @@ public class SensorsCalulations {
         float axisX = 0;
         float axisY = 0;
         float axisZ = 0;
+        float axisO = 0;
         double omegaMagnitude;
 
         if (timestamp != 0) {
@@ -101,19 +100,23 @@ public class SensorsCalulations {
         float[] deltaRotationMatrix = new float[9];
         SensorManager.getRotationMatrixFromVector(deltaRotationMatrix, deltaRotationVector);
 
-        String disp = event.sensor.getName() + "\n";
-        disp += "X: " + Double.toString(Math.round(axisX * INT_ROUNDVAL) / DOUBLE_ROUNDVAL) + "  rad/s" + "\n"
-                + "Y: " + Double.toString(Math.round(axisY * INT_ROUNDVAL) / DOUBLE_ROUNDVAL) + "  rad/s" + "\n"
-                + "Z: " + Double.toString(Math.round(axisZ * INT_ROUNDVAL) / DOUBLE_ROUNDVAL) + "  rad/s" + "\n";
         float rotationInRadians = deltaRotationVector[2];
         double rotationInDegrees = Math.toDegrees(rotationInRadians);
         rotationInDegrees = (360 + rotationInDegrees) % 360;
-        disp += "Orientation: " + rotationInDegrees + "\u00b0";
-
-        return disp;
+//        disp += "Orientation: " + rotationInDegrees + "\u00b0";
+        axisX = Math.round(axisX * INT_ROUNDVAL) / DOUBLE_ROUNDVAL;
+        axisY = Math.round(axisY * INT_ROUNDVAL) / DOUBLE_ROUNDVAL;
+        axisZ = Math.round(axisZ * INT_ROUNDVAL) / DOUBLE_ROUNDVAL;
+        axisO = rotationInRadians;
+        float [] gyro = new float[4];
+        gyro[0] = axisX;
+        gyro[1] = axisY;
+        gyro[2] = axisZ;
+        gyro[3] = axisO;
+        return gyro;
     }
 
-    public String Calculate_Gyro_Un(SensorEvent event) {
+    public float [] Calculate_Gyro_Un(SensorEvent event) {
 
         // This timestep's delta rotation to be multiplied by the current rotation
         // after computing it from the gyro sample data.
@@ -126,41 +129,67 @@ public class SensorsCalulations {
         // User code should concatenate the delta rotation we computed with the current rotation
         // in order to get the updated rotation.
         //  rotationCurrent = rotationCurrent * deltaRotationMatrix;
-        String disp = event.sensor.getName() + "\n";
-        disp += "X: " + Double.toString(Math.round(axisX * INT_ROUNDVAL) / DOUBLE_ROUNDVAL) + "  rad/s" + "\n"
-                + "Y: " + Double.toString(Math.round(axisY * INT_ROUNDVAL) / DOUBLE_ROUNDVAL) + "  rad/s" + "\n"
-                + "Z: " + Double.toString(Math.round(axisZ * INT_ROUNDVAL) / DOUBLE_ROUNDVAL) + "  rad/s" + "\n";
 
-        return disp;
+        float [] gyro = new float[3];
+        gyro[0] = axisX;
+        gyro[1] = axisY;
+        gyro[2] = axisZ;
+        return gyro;
     }
 
-    public String Calculate_Gravity(SensorEvent event) {
+    public float [] Calculate_Gravity(SensorEvent event) {
 
-        double axisX = event.values[0];
-        double axisY = event.values[1];
-        double axisZ = event.values[2];
+        float axisX = event.values[0];
+        float axisY = event.values[1];
+        float axisZ = event.values[2];
 
-        String disp = event.sensor.getName() + "\n";
-        disp += "X: " + Double.toString(Math.round(axisX * INT_ROUNDVAL) / DOUBLE_ROUNDVAL) + " m/s²" + "\n"
-                + "Y: " + Double.toString(Math.round(axisY * INT_ROUNDVAL) / DOUBLE_ROUNDVAL) + " m/s²" + "\n"
-                + "Z: " + Double.toString(Math.round(axisZ * INT_ROUNDVAL) / DOUBLE_ROUNDVAL) + " m/s²" + "\n";
-
-        return disp;
+        float [] grav = new float[3];
+        grav[0] = Math.round(axisX * INT_ROUNDVAL) / DOUBLE_ROUNDVAL;
+        grav[1] = Math.round(axisY * INT_ROUNDVAL) / DOUBLE_ROUNDVAL;
+        grav[2] = Math.round(axisZ * INT_ROUNDVAL) / DOUBLE_ROUNDVAL;
+        return grav;
     }
 
-    public double Calculate_Magnetometer(SensorEvent event) {
-        return event.values[0];
+    public float Calculate_Magnetometer(SensorEvent event) {
+
+        double mT = event.values[0];
+        return Math.round(mT * INT_ROUNDVAL) / DOUBLE_ROUNDVAL;
     }
 
-    public double Calculate_MagnetometerUn(SensorEvent event) {
-        return event.values[0];
+    public float Calculate_MagnetometerUn(SensorEvent event) {
+
+        double mT = event.values[0];
+        return Math.round(mT * INT_ROUNDVAL) / DOUBLE_ROUNDVAL;
     }
 
-    public float[] Calculate_LinearAccel(SensorEvent event) {
-        return event.values;
+    public float [] Calculate_LinearAccel(SensorEvent event) {
+
+        float la = event.values[0];
+        float la1 = event.values[1];
+        float la2 = event.values[2];
+        float [] lina = new float[3];
+        lina[0] = Math.round(la * INT_ROUNDVAL) / DOUBLE_ROUNDVAL;
+        lina[1] = Math.round(la1 * INT_ROUNDVAL) / DOUBLE_ROUNDVAL;
+        lina[2] = Math.round(la2 * INT_ROUNDVAL) / DOUBLE_ROUNDVAL;
+        return lina;
     }
 
-    public float[] Calculate_RotationVector(SensorEvent event) {
-        return event.values;
+    public float [] Calculate_RotationVector(SensorEvent event) {
+
+        float axisX = event.values[0];
+        float axisY = event.values[1];
+        float axisZ = event.values[2];
+        float W = event.values[3];
+
+        // User code should concatenate the delta rotation we computed with the current rotation
+        // in order to get the updated rotation.
+        //  rotationCurrent = rotationCurrent * deltaRotationMatrix;
+
+        float [] rv = new float[4];
+        rv[0] = Math.round(axisX * INT_ROUNDVAL) / DOUBLE_ROUNDVAL;
+        rv[1] = Math.round(axisY * INT_ROUNDVAL) / DOUBLE_ROUNDVAL;
+        rv[2] = Math.round(axisZ * INT_ROUNDVAL) / DOUBLE_ROUNDVAL;
+        rv[3] = Math.round(W * INT_ROUNDVAL) / DOUBLE_ROUNDVAL;
+        return rv;
     }
 }

@@ -10,7 +10,6 @@ import android.hardware.SensorEventListener;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Handler;
@@ -19,7 +18,6 @@ import android.util.Log;
 import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
 import android.widget.Toast;
-
 import com.android.volley.NetworkResponse;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
@@ -27,15 +25,8 @@ import com.android.volley.VolleyError;
 import com.android.volley.VolleyLog;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
-
 import org.json.JSONObject;
-
-import java.io.BufferedOutputStream;
-import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
 
 public class SensorsService extends Service implements SensorEventListener, LocationListener {
 
@@ -68,8 +59,8 @@ public class SensorsService extends Service implements SensorEventListener, Loca
     private float [] tvGyro;
     private float [] tvGyroUn;
     private float [] tvGravity;
-    private float [] tvMagnitometer;
-    private float [] tvMagnitometerUn;
+    private float tvMagnitometer;
+    private float tvMagnitometerUn;
     private float [] tvLinearAccel;
     private float [] tvRotationVector;
 
@@ -85,7 +76,7 @@ public class SensorsService extends Service implements SensorEventListener, Loca
 
         intent = new Intent(BROADCAST_ACTION);
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-//        calcs = new SensorsCalulations(mSensorManager);
+        calcs = new SensorsCalulations(mSensorManager);
         mAccel = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mGyro = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
         mGyroUn = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE_UNCALIBRATED);
@@ -97,8 +88,6 @@ public class SensorsService extends Service implements SensorEventListener, Loca
 
     }
 
-//    @Override
-//    public void onStart(Intent intent, int startId) {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId){
         handler.removeCallbacks(sendUpdatesToUI);
@@ -140,51 +129,6 @@ public class SensorsService extends Service implements SensorEventListener, Loca
 
         return mStartMode;
     }
-
-//    public static void execute(String json) {
-////        Map<String, String> comment = new HashMap<String, String>();
-////        comment.put("subject", "Using the GSON library");
-////        comment.put("message", "Using libraries is convenient.");
-////        String json = new GsonBuilder().create().toJson(comment, Map.class);
-//        makeRequest("http://192.168.0.1:3000/post/77/comments", json);
-//    }
-//
-//    public static HttpResponse makeRequest(String uri, String json) {
-//        try {
-//            HttpPost httpPost = new HttpPost(uri);
-//            httpPost.setEntity(new StringEntity(json));
-//            httpPost.setHeader("Accept", "application/json");
-//            httpPost.setHeader("Content-type", "application/json");
-//            return new DefaultHttpClient().execute(httpPost);
-//        } catch (UnsupportedEncodingException e) {
-//            e.printStackTrace();
-//        } catch (ClientProtocolException e) {
-//            e.printStackTrace();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-//        return null;
-//    }
-
-
-//    public void SendJSON(String json){
-//        try {
-//            URL url = new URL("http://172.31.4.246/update");
-//            HttpURLConnection client;
-//            client = (HttpURLConnection) url.openConnection();
-//            client.setRequestMethod("POST");
-//            client.setDoOutput(true);
-//
-//            OutputStream outPost = new BufferedOutputStream(client.getOutputStream());
-//            outPost.write(json.getBytes());
-//            outPost.flush();
-//            outPost.close();
-//        }
-//        catch (Exception e)
-//        {
-//            e.printStackTrace();
-//        }
-//    }
 
     public void SendJSON(){
         String s = "{";
@@ -265,43 +209,35 @@ public class SensorsService extends Service implements SensorEventListener, Loca
         // Do something with this sensor value.
         switch (event.sensor.getType()){
             case Sensor.TYPE_ACCELEROMETER:
-//                tvAccel = calcs.Calculate_Accel(event);
-                tvAccel = event.values;
+                tvAccel = calcs.Calculate_Accel(event);
                 break;
 
             case Sensor.TYPE_GYROSCOPE:
-//                tvGyro = calcs.Calculate_Gyro(event);
-                tvGyro = event.values;
+                tvGyro = calcs.Calculate_Gyro(event);
                 break;
 
             case Sensor.TYPE_GYROSCOPE_UNCALIBRATED:
-//                tvGyroUn = calcs.Calculate_Gyro_Un(event);
-                tvGyroUn = event.values;
+                tvGyroUn = calcs.Calculate_Gyro_Un(event);
                 break;
 
             case Sensor.TYPE_GRAVITY:
-//                tvGravity = calcs.Calculate_Gravity(event);
-                tvGravity = event.values;
+                tvGravity = calcs.Calculate_Gravity(event);
                 break;
 
             case Sensor.TYPE_MAGNETIC_FIELD:
-//                tvMagnitometer = calcs.Calculate_Magnetometer(event);
-                tvMagnitometer = event.values;
+                tvMagnitometer = calcs.Calculate_Magnetometer(event);
                 break;
 
             case Sensor.TYPE_MAGNETIC_FIELD_UNCALIBRATED:
-//                tvMagnitometerUn = calcs.Calculate_MagnetometerUn(event);
-                tvMagnitometerUn = event.values;
+                tvMagnitometerUn = calcs.Calculate_MagnetometerUn(event);
                 break;
 
             case Sensor.TYPE_LINEAR_ACCELERATION:
-//                tvLinearAccel = calcs.Calculate_LinearAccel(event);
-                tvLinearAccel = event.values;
+                tvLinearAccel = calcs.Calculate_LinearAccel(event);
                 break;
 
             case Sensor.TYPE_ROTATION_VECTOR:
-//                tvRotationVector = calcs.Calculate_RotationVector(event);
-                tvRotationVector = event.values;
+                tvRotationVector = calcs.Calculate_RotationVector(event);
                 break;
         }
 
@@ -311,14 +247,14 @@ public class SensorsService extends Service implements SensorEventListener, Loca
 
     private void DisplayLoggingInfo() {
 //        Log.d(TAG, "entered DisplayLoggingInfo");
-        intent.putExtra("TYPE_ACCELEROMETER", tvAccel);
-        intent.putExtra("TYPE_GYROSCOPE", tvGyro);
-        intent.putExtra("TYPE_GYROSCOPE_UNCALIBRATED", tvGyroUn);
-        intent.putExtra("TYPE_GRAVITY", tvGravity);
+        intent.putExtra("TYPE_ACCELEROMETER", tvAccel.toString());
+        intent.putExtra("TYPE_GYROSCOPE", tvGyro.toString());
+        intent.putExtra("TYPE_GYROSCOPE_UNCALIBRATED", tvGyroUn.toString());
+        intent.putExtra("TYPE_GRAVITY", tvGravity.toString());
         intent.putExtra("TYPE_MAGNETIC_FIELD", tvMagnitometer);
         intent.putExtra("TYPE_MAGNETIC_FIELD_UNCALIBRATED", tvMagnitometerUn);
-        intent.putExtra("TYPE_LINEAR_ACCELERATION", tvLinearAccel);
-        intent.putExtra("TYPE_ROTATION_VECTOR", tvRotationVector);
+        intent.putExtra("TYPE_LINEAR_ACCELERATION", tvLinearAccel.toString());
+        intent.putExtra("TYPE_ROTATION_VECTOR", tvRotationVector.toString());
         intent.putExtra("GPS", sLongitude + "\n" + sLatitude + "\n" + sSpeed);
         sendBroadcast(intent);
     }

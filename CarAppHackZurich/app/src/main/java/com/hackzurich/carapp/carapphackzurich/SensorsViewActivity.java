@@ -62,14 +62,14 @@ public class SensorsViewActivity extends Activity {
     }
 
     private void updateUI(Intent intent) {
-        tvAccel.setText(intent.getStringExtra("TYPE_ACCELEROMETER"));
-        tvGyro.setText(intent.getStringExtra("TYPE_GYROSCOPE"));
-        tvGyroUn.setText(intent.getStringExtra("TYPE_GYROSCOPE_UNCALIBRATED"));
-        tvGravity.setText(intent.getStringExtra("TYPE_MAGNETIC_FIELD"));
-        tvMagnitometer.setText(intent.getStringExtra("TYPE_MAGNETIC_FIELD_UNCALIBRATED"));
-        tvMagnitometerUn.setText(intent.getStringExtra("TYPE_LINEAR_ACCELERATION"));
-        tvLinearAccel.setText(intent.getStringExtra("TYPE_ROTATION_VECTOR"));
-        tvGPSLovation.setText(intent.getStringExtra("GPS"));
+        tvAccel.setText(intent.getStringExtra("TYPE_ACCELEROMETER").toString());
+        tvGyro.setText(intent.getStringExtra("TYPE_GYROSCOPE").toString());
+        tvGyroUn.setText(intent.getStringExtra("TYPE_GYROSCOPE_UNCALIBRATED").toString());
+        tvGravity.setText(intent.getStringExtra("TYPE_MAGNETIC_FIELD").toString());
+        tvMagnitometer.setText(intent.getStringExtra("TYPE_MAGNETIC_FIELD_UNCALIBRATED").toString());
+        tvMagnitometerUn.setText(intent.getStringExtra("TYPE_LINEAR_ACCELERATION").toString());
+        tvLinearAccel.setText(intent.getStringExtra("TYPE_ROTATION_VECTOR").toString());
+        tvGPSLovation.setText(intent.getStringExtra("GPS").toString());
 //        Log.d(TAG, "TYPE_ACCELEROMETER");
 //        Log.d(TAG, "TYPE_GYROSCOPE");
 //        Log.d(TAG, "TYPE_GYROSCOPE_UNCALIBRATED");
