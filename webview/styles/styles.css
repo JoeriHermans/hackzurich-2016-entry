@@ -63,13 +63,16 @@ html, body, .app-wrapper {
     font-family: 'Roboto', sans-serif;
     font-weight: 300;
     text-transform: uppercase;
+
+    display: flex;
+    flex-direction: column;
 }
 
 /* --- --- --- Map --- --- --- */
 
 .app-wrapper .map-wrapper {
     width: 100%;
-    height: 70%;
+    flex-grow: 1;
 }
 
 /* Disable controls  */
@@ -80,12 +83,10 @@ html, body, .app-wrapper {
 /* --- --- --- Information panel --- --- --- */
 
 .app-wrapper .info-panel-wrapper {
-    font-size: 1.4rem;
+    font-size: 1.1rem;
     color: #ddd;
 
     width: 100%;
-    height: 30%;
-
     background-color: #333;
     border-top: 3px solid #009688;
 
@@ -98,9 +99,14 @@ html, body, .app-wrapper {
     margin-bottom: 3%;
 }
 
-.app-wrapper .info-panel-wrapper .prop > span {
+.app-wrapper .info-panel-wrapper div > span {
     font-weight: 400;
     color: #fff;
+}
+
+.app-wrapper .info-panel-wrapper .road-name {
+    font-weight: 300;
+    margin-bottom: 3%;
 }
 
 .app-wrapper .info-panel-wrapper .event {
@@ -114,4 +120,12 @@ html, body, .app-wrapper {
 
 .app-wrapper .info-panel-wrapper .event.emergency_alert {
     color: #ffa500;
+}
+
+.app-wrapper .info-panel-wrapper .event.emergency_traffic_light_stop {
+    color: #c03636;
+}
+
+.app-wrapper .info-panel-wrapper .event.emergency_stop_others {
+    color: #c03636;
 }
