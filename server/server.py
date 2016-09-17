@@ -12,6 +12,27 @@ import numpy as np
 
 import json
 
+from math import cos, asin, sqrt
+
+## BEGIN Utility functions. ####################################################
+
+def distance(a, b):
+    # Fetch the parameters of the first car.
+    lon_1 = float(a["longitude"])
+    lat_1 = float(a["latitude"])
+    # Fetch the parameters of the second car.
+    lon_2 = float(b["longitude"])
+    lat_2 = float(b["latitude"])
+    # Distance computation from StackOverflow (http://stackoverflow.com/questions/365826/calculate-distance-between-2-gps-coordinates)
+    p = 0.017453292519943295
+    a = 0.5 - cos((lat_2 - lat_1) * p)/2 + cos(lat_1 * p) * cos(lat_2 * p) * (1 - cos((lon_2 - lon_1) * p)) / 2
+    distance = 12742 * asin(sqrt(a))
+
+    return distance
+
+
+## END Utility functions. ######################################################
+
 ## BEGIN Event Listeners. ######################################################
 
 class EventListener(object):
@@ -212,14 +233,23 @@ class Application(object):
     def fetch_other_cars(self, car):
         cars = []
 
-        # TODO Implement.
+        with self.mutex_cars:
+            num_cars = len(self.cars)
+            for i in range(0, num_cars):
+                c = self.cars[i]
+                if car["car_id"] != c["car_id"] and distance(c["sensors"], car["sensors"]) <= 0.2:
+                    cars.append(c)
 
         return cars
 
     def fetch_events(self, car):
         events = []
 
-        # TODO Implement.
+        with self.mutex_events:
+            for e in self.events:
+                if e["car_id"] != car["car_id"] and\
+                   distance(self.get_car(e["car_id"]), car["sensors"]) <= 0.2:
+                    events.append(e)
 
         return events
 
@@ -245,15 +275,15 @@ class Application(object):
         def stream(car_id):
             car_id = int(car_id)
             car = self.get_car(car_id)
-            other_cars = self.fetch_other_cars(car_id)
-            events = self.fetch_events(car_id)
+            other_cars = self.fetch_other_cars(car)
+            events = self.fetch_events(car)
             # Prepare the structure to be JSONified.
             data = {}
             data["car"] = car
             data["other_cars"] = other_cars
             data["events"] = events
 
-            return data
+            return json.dumps(data)
 
         ## END REST Routes. ####################################################
 
@@ -267,7 +297,7 @@ def main():
     # Add dummy cars (us).
     application.add_car(0) # Athanos
     application.add_car(1) # Przemek
-    application.add_car(2) # Joeri
+    #application.add_car(2) # Joeri
     # Add event listeners.
     application.add_event_listener(CrashEventListener(crash_tolerance=4))
     application.add_event_listener(EmergencyServiceEventListener(cars=application.cars,
