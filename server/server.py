@@ -37,7 +37,7 @@ class EmergencyServiceEventListener(EventListener):
     def in_emergency(self, update):
         in_emergency = update["in_emergency"]
 
-        return int(in_emergency)
+        return int(in_emergency) == 1
 
     def not_in_events(self, update):
         in_events = False
@@ -55,7 +55,17 @@ class EmergencyServiceEventListener(EventListener):
     def create_event(self, update):
         event = {}
 
-        # TODO Implement.
+        # Create the attributes which are required to describe the event.
+        event_type = "emergency_alert"
+        event_timestamp = update["timestamp"]
+        event_expiration_timestamp = event_timestamp + self.event_timeout
+        event_car_id = int(update["car_id"])
+        # Build an event using a dictionary.
+        event = {}
+        event["event_type"] = event_type
+        event["timestamp"] = event_timestamp
+        event["expiration_timestamp"] = event_expiration_timestamp
+        event["car_id"] = event_car_id
 
         return event
 
@@ -226,7 +236,7 @@ class Application(object):
         @app.route("/stream/<car_id>")
         def stream(car_id):
             car = self.get_car(car_id)
-
+            print(car_id)
             # TODO Implement.
 
             return str(car)
