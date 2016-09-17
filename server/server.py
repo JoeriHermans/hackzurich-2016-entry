@@ -209,6 +209,20 @@ class Application(object):
 
         return car
 
+    def fetch_other_cars(self, car):
+        cars = []
+
+        # TODO Implement.
+
+        return cars
+
+    def fetch_events(self, car):
+        events = []
+
+        # TODO Implement.
+
+        return events
+
     def service(self):
         app = Flask(__name__)
 
@@ -229,11 +243,17 @@ class Application(object):
 
         @app.route("/stream/<car_id>")
         def stream(car_id):
+            car_id = int(car_id)
             car = self.get_car(car_id)
-            print(car_id)
-            # TODO Implement.
+            other_cars = self.fetch_other_cars(car_id)
+            events = self.fetch_events(car_id)
+            # Prepare the structure to be JSONified.
+            data = {}
+            data["car"] = car
+            data["other_cars"] = other_cars
+            data["events"] = events
 
-            return str(car)
+            return data
 
         ## END REST Routes. ####################################################
 
