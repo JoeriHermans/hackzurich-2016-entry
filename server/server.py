@@ -472,11 +472,12 @@ class Application(object):
 
         with self.mutex_smart_infra:
             for infra in self.smart_infrastructure:
+                print(infra)
                 location = {}
                 location["longitude"] = infra.longitude
                 location["latitude"] = infra.latitude
                 d = distance(location, car["sensors"])
-                if d <= 0.2 and infra.on_route(car):
+                if d <= 10000 and infra.on_route(car):
                     infrastructure.append(self.fetch_si_status(infra, car))
 
         return infrastructure
