@@ -69,6 +69,7 @@ public class SensorsService extends Service implements SensorEventListener, Loca
     private double sLongitude;
     private double sLatitude;
     private double sSpeed;
+    private String Link;
 
     @Override
     public void onCreate() {
@@ -94,6 +95,7 @@ public class SensorsService extends Service implements SensorEventListener, Loca
         CarID = intent.getStringExtra("CarID");
         CarType = intent.getStringExtra("CarType");
         InEmergenecy = intent.getStringExtra("InEmergency");
+        Link = intent.getStringExtra("Link");
 
 //        handler.postDelayed(sendUpdatesToUI, 1000); // 1 second
         handler.postDelayed(sendUpdatesToUI, 1000);
@@ -154,7 +156,8 @@ public class SensorsService extends Service implements SensorEventListener, Loca
         s += "}";
 
         JSONObject j = null;
-        final String url = "http://172.31.4.246:5000/update";
+//        final String url = "http://172.31.4.246:5000/update";
+        final String url = Link;
         try {
             j = new JSONObject(s);
             Log.i("JSON", s);

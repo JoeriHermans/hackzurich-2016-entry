@@ -48,6 +48,15 @@
             android:layout_height="wrap_content" />
 
         <Button
+            android:id="@+id/btSetLink"
+            android:onClick="setLink"
+            android:text="@string/Setlink" />
+        <TextView
+            android:id="@+id/tvLink"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <Button
             android:id="@+id/btStarSensorService"
             android:onClick="StarSensorService"
             android:text="@string/StarSensorService" />

@@ -31,9 +31,11 @@ public class MainActivity extends Activity {
     private Button btStopSensorService;
     private Button btDisplaySensors;
     private Button btInEmergency;
+    private Button btSetlink;
     private TextView tvCarID;
     private TextView tvCarType;
     private TextView tvInEmergency;
+    private TextView tvLink;
     private TextView tvLogArea;
 
     @Override
@@ -54,6 +56,8 @@ public class MainActivity extends Activity {
         btDisplaySensors = (Button) findViewById(R.id.btDisplaySensors);
         btInEmergency = (Button) findViewById(R.id.btInEmergency);
         tvInEmergency = (TextView) findViewById(R.id.tvEmergenecy);
+        btSetlink = (Button) findViewById(R.id.btSetLink);
+        tvLink = (TextView) findViewById(R.id.tvLink);
         tvLogArea = (TextView) findViewById(R.id.tvLogArea);
 
     }
@@ -91,6 +95,10 @@ public class MainActivity extends Activity {
         showInputDialog("Type");
     }
 
+    public void setLink(View view) {
+        showInputDialog("Link");
+    }
+
     protected void showInputDialog(final String type) {
 
         // get prompts.xml view
@@ -117,6 +125,9 @@ public class MainActivity extends Activity {
                             }
 
                         }
+                        else if(type.equals("Link")){
+                            tvLink.setText(editText.getText());
+                        }
                     }
                 })
                 .setNegativeButton("Cancel",
@@ -135,6 +146,7 @@ public class MainActivity extends Activity {
         backgroundIntent.putExtra("CarID", tvCarID.getText().toString());
         backgroundIntent.putExtra("CarType", tvCarType.getText().toString());
         backgroundIntent.putExtra("InEmergency", tvInEmergency.getText().toString());
+        backgroundIntent.putExtra("Link", tvLink.getText().toString());
         startService(backgroundIntent);
         registerReceiver(sensorsSReceiver, new IntentFilter(SensorsService.BROADCAST_ACTION));
     }
@@ -173,4 +185,5 @@ public class MainActivity extends Activity {
         else
             tvInEmergency.setText("0");
     }
+
 }
