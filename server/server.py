@@ -77,7 +77,11 @@ class EmergencyTrafficLightStopEventListener(EventListener):
         event = {}
 
         event_type = "emergency_traffic_light_stop"
-        # TODO Implement.
+        event_car_id = int(update["car_id"])
+        # Build a dictionary.
+        event["event_type"] = event_type
+        event["car_id"] = event_car_id
+        event["expiration_timestamp"] = int(update["timestamp"]) + 20
 
         return event
 
@@ -92,8 +96,7 @@ class EmergencyTrafficLightStopEventListener(EventListener):
             stopping_distance = (speed * speed) / (2 * 0.7 * 9.81)
             # Convert to Kilometers
             stopping_distance /= 1000
-            print(distance_to_intersection + " - " + stopping_distance)
-            if stopping_distance < (distance_to_intersection + 0.5):
+            if stopping_distance >= (distance_to_intersection + 0.5):
                 event = self.create_event(update, traffic_light)
 
         return event
@@ -222,26 +225,14 @@ class CrashEventListener(EventListener):
 
 ## BEGIN Smart Infrastructure. #################################################
 
-class SmartInfrastructure(object):
-
-    def __init__(self, id, type, latitude, longitude):
-        self.id = id
-        self.type = type
-        self.latitude = latitude
-        self.longitute = longitude
-
-
-
-
-class SmartTrafficLight(SmartInfrastructure):
+class SmartTrafficLight(object):
 
     def __init__(self, id, latitude, longitude, route_a, route_b, url):
-        super(SmartTrafficLight, self).__init__(id=id, type="traffic_light", latitude=latitude, longitude=longitude)
         self.route_a = route_a
         self.route_b = route_b
         self.url = url
         self.id = id
-        self.type = type
+        self.type = "traffic_light"
         self.latitude = latitude
         self.longitude = longitude
 
@@ -259,7 +250,7 @@ class SmartTrafficLight(SmartInfrastructure):
         a["longitude"] = self.longitude
         a["latitude"] = self.latitude
 
-        return distance(a, car)
+        return distance(a, car['sensors'])
 
     def is_red(self, car):
         is_red = True
@@ -282,7 +273,7 @@ class SmartTrafficLight(SmartInfrastructure):
         return is_green
 
     def on_route(self, car):
-        route = car["route"]
+        route = car["road"]
 
         return self.route_a == route or self.route_b == route
 
@@ -394,8 +385,7 @@ class Application(object):
         with self.mutex_events:
             for e in self.events:
                 event_car = self.get_car(e["car_id"])
-                if e["car_id"] != car["car_id"] and\
-                   distance(self.get_car(e["car_id"])["sensors"], car["sensors"]) <= 1:
+                if distance(self.get_car(e["car_id"])["sensors"], car["sensors"]) <= 0.2:
                     events.append(e)
 
         return events
@@ -443,6 +433,7 @@ class Application(object):
             data["car"] = car
             data["other_cars"] = other_cars
             data["events"] = events
+            print(events)
             # Prepare the response.
             resp = Response(json.dumps(data))
             resp.headers['Access-Control-Allow-Origin'] = '*'
