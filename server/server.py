@@ -1,17 +1,13 @@
+# Note: The API is totally crap.
+
 from flask import Flask, request, Response
-
 from threading import Lock
-
 import threading
-
 from Queue import Queue
-
 import time
-
 import numpy as np
-
 import json
-
+import requests
 from math import cos, asin, sqrt
 
 ## BEGIN Utility functions. ####################################################
@@ -29,7 +25,6 @@ def distance(a, b):
     distance = 12742 * asin(sqrt(a))
 
     return distance
-
 
 ## END Utility functions. ######################################################
 
@@ -160,6 +155,9 @@ class CrashEventListener(EventListener):
 
 ## END Event Listeners. ########################################################
 
+## BEGIN Smart Infrastructure. #################################################
+## END Smart Infrastructure. ###################################################
+
 class Application(object):
 
     def __init__(self):
@@ -175,7 +173,17 @@ class Application(object):
 
     def add_car(self, car_id):
         with self.mutex_cars:
-            self.cars[car_id] = {}
+            sensors = {}
+            sensors["latitude"] = 0
+            sensors["longitude"] = 0
+            sensors["speed"] = 0
+            c = {}
+            c["car_id"] = int(car_id)
+            c["car_type"] = 0
+            c["in_emergency"] = 0
+            c["timestamp"] = 0
+            c["sensors"] = sensors
+            self.cars[car_id] = c
 
     def add_event(self, event):
         with self.mutex_events:
@@ -247,11 +255,25 @@ class Application(object):
 
         with self.mutex_events:
             for e in self.events:
+                event_car = self.get_car(e["car_id"])
                 if e["car_id"] != car["car_id"] and\
-                   distance(self.get_car(e["car_id"]), car["sensors"]) <= 0.2:
+                   distance(self.get_car(e["car_id"])["sensors"], car["sensors"]) <= 0.2:
                     events.append(e)
 
         return events
+
+    def update_metadata(self, data):
+        lat = float(data["sensors"]["latitude"])
+        lon = float(data["sensors"]["longitude"])
+        r = requests.get("http://maps.googleapis.com/maps/api/geocode/json?latlng=" + `lat` + "," + `lon` + "&sensor=true")
+        metadata = r.json()
+        address_components = metadata["results"][0]["address_components"]
+        road = "Unknown"
+        for component in address_components:
+            if "route" in component["types"]:
+                road = component["long_name"]
+        # Add the metadata to the car information.
+        data["road"] = road
 
     def service(self):
         app = Flask(__name__)
@@ -266,6 +288,7 @@ class Application(object):
             car = self.get_car(car_id)
             # Check if the car exists.
             if not car == None:
+                self.update_metadata(data)
                 self.update_car(car_id, data)
                 self.update_queue.put(data)
 
@@ -300,7 +323,7 @@ def main():
     # Add dummy cars (us).
     application.add_car(0) # Athanos
     application.add_car(1) # Przemek
-    #application.add_car(2) # Joeri
+    application.add_car(2) # Joeri
     # Add event listeners.
     application.add_event_listener(CrashEventListener(crash_tolerance=4))
     application.add_event_listener(EmergencyServiceEventListener(cars=application.cars,
