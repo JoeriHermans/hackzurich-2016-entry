@@ -35,6 +35,113 @@ class EventListener(object):
     def handle(self, update):
         raise NotImplementedError
 
+class EmergencyTrafficLightStopEventListener(EventListener):
+
+    def __init__(self, cars, cars_mutex, events, events_mutex, smart_infrastructure, smart_infra_mutex, detection_range=1.0, event_timeout=30):
+        self.cars = cars
+        self.mutex_cars = cars
+        self.events = events
+        self.mutex_events = events_mutex
+        self.smart_infrastructure = smart_infrastructure
+        self.mutex_smart_infra = smart_infra_mutex
+        self.detection_range = detection_range
+        self.event_timeout = event_timeout
+
+    def get_traffic_lights_on_route(self, update):
+        traffic_lights = []
+        with self.mutex_smart_infra:
+            for infra in self.smart_infrastructure:
+                # Compute the distance to the smart infrastructure.
+                d = infra.distance_to(update)
+                # Check if the type is a traffic light.
+                if infra.get_type() == "traffic_light" and d <= 0.5 and infra.on_route(update):
+                    traffic_lights.append(infra)
+
+        return traffic_lights
+
+    def get_closest_traffic_light(self, car, traffic_lights):
+        traffic_light = traffic_lights[0]
+        min_distance = traffic_light.distance_to(car)
+        num_traffic_lights = len(traffic_lights)
+        # Iterate through the rest.
+        for i in range(1, num_traffic_lights):
+            tf = traffic_lights[i]
+            d = tf.distance_to(car)
+            if d < min_distance:
+                min_distance = d
+                traffic_light = tf
+
+        return traffic_light
+
+    def create_event(self, update, traffic_light):
+        event = {}
+
+        event_type = "emergency_traffic_light_stop"
+        event_car_id = int(update["car_id"])
+        # Build a dictionary.
+        event["event_type"] = event_type
+        event["car_id"] = event_car_id
+        event["expiration_timestamp"] = int(update["timestamp"]) + 20
+
+        return event
+
+    def fetch_relevant_cars(self, traffic_light, road):
+        cars = []
+
+        location = {}
+        location["latitude"] = traffic_light.latitude
+        location["longitude"] = traffic_light.longitude
+        num_cars = len(self.cars)
+        for i in range(0, num_cars):
+            car = self.cars[i]
+            d = distance(car["sensors"], location)
+            print(d)
+            print(car["road"] != road)
+            print(traffic_light.on_route(car))
+            if d <= 6000 and car["road"] != road and traffic_light.on_route(car):
+                cars.append(car)
+
+        return cars
+
+    def add_event(self, event):
+        type = event['event_type']
+        car_id = event['car_id']
+        dont_add = False
+        with self.mutex_events:
+            for e in self.events:
+                if e['event_type'] == type and car_id == e['car_id']:
+                    dont_add = True
+            if not dont_add:
+                self.events.append(event)
+
+    def inform_cars(self, traffic_light, road):
+        cars = self.fetch_relevant_cars(traffic_light, road)
+        print(cars)
+        for car in cars:
+            event = {}
+            event['expiration_timestamp'] = car["timestamp"] + 20
+            event['car_id'] = int(car["car_id"])
+            event['event_type'] = "emergency_stop_others"
+            self.add_event(event)
+
+    def handle(self, update):
+        event = None
+
+        traffic_lights = self.get_traffic_lights_on_route(update)
+        if len(traffic_lights) > 0:
+            traffic_light = self.get_closest_traffic_light(update, traffic_lights)
+            if traffic_light.is_red(update):
+                distance_to_intersection = traffic_light.distance_to(update)
+                speed = float(update["sensors"]["speed"])
+                stopping_distance = (speed * speed) / (2 * 0.7 * 9.81)
+                # Convert to Kilometers
+                stopping_distance /= 1000
+                if stopping_distance >= (distance_to_intersection + 0.5):
+                    event = self.create_event(update, traffic_light)
+                    self.inform_cars(traffic_light, update["road"])
+
+        return event
+
 class EmergencyServiceEventListener(EventListener):
 
     def __init__(self, cars, cars_mutex, events, events_mutex, detection_range=1.0, event_timeout=180):
@@ -156,6 +263,61 @@ class CrashEventListener(EventListener):
 ## END Event Listeners. ########################################################
 
 ## BEGIN Smart Infrastructure. #################################################
+
+class SmartTrafficLight(object):
+
+    def __init__(self, id, latitude, longitude, route_a, route_b, url):
+        self.route_a = route_a
+        self.route_b = route_b
+        self.url = url
+        self.id = id
+        self.type = "traffic_light"
+        self.latitude = latitude
+        self.longitude = longitude
+
+    def get_information(self):
+        r = requests.get(self.url)
+        data = r.json()
+
+        return data
+
+    def get_type(self):
+        return self.type
+
+    def distance_to(self, car):
+        a = {}
+        a["longitude"] = self.longitude
+        a["latitude"] = self.latitude
+
+        return distance(a, car['sensors'])
+
+    def is_red(self, car):
+        is_red = False
+        data = self.get_information()
+        states = data["states"]
+        for state in states:
+            if state["road"] == car["road"]:
+                is_red = (state["state"] == "red")
+                break
+
+        return is_red
+
+    def is_green(self, car):
+        is_green = False
+        data = self.get_information()
+        states = data["states"]
+        for state in states:
+            if state["road"] == car["road"]:
+                is_green = (state["state"] == "green")
+                break
+
+        return is_green
+
+    def on_route(self, car):
+        route = car["road"]
+
+        return self.route_a == route or self.route_b == route
+
 ## END Smart Infrastructure. ###################################################
 
 class Application(object):
@@ -165,6 +327,8 @@ class Application(object):
         self.update_queue = Queue()
         self.events = []
         self.event_listeners = []
+        self.smart_infrastructure = []
+        self.mutex_smart_infra = Lock()
         self.mutex_cars = Lock()
         self.mutex_events = Lock()
         self.mutex_event_listeners = Lock()
@@ -177,17 +341,42 @@ class Application(object):
             sensors["latitude"] = 0
             sensors["longitude"] = 0
             sensors["speed"] = 0
+            sensors["heading"] = 0
+            sensors["acceleration_x"] = 0
+            sensors["acceleration_y"] = 0
+            sensors["acceleration_z"] = 0
             c = {}
             c["car_id"] = int(car_id)
             c["car_type"] = 0
             c["in_emergency"] = 0
             c["timestamp"] = 0
+            c["road"] = "Not available"
             c["sensors"] = sensors
+            if car_id == 0:
+                sensors["latitude"] = 46.234406
+                sensors['longitude'] = 6.048640
+                c["road"] = "Route A Einstein"
+            if car_id == 1:
+                sensors["latitude"] = 46.233488
+                sensors['longitude'] = 6.047551
+                c["road"] = "Route Rutherford"
+
             self.cars[car_id] = c
 
     def add_event(self, event):
+        type = event['event_type']
+        car_id = event['car_id']
+        dont_add = False
         with self.mutex_events:
-            self.events.append(event)
+            for e in self.events:
+                if e['event_type'] == type and car_id == e['car_id']:
+                    dont_add = True
+            if not dont_add:
+                self.events.append(event)
+
+    def add_smart_infrastructure(self, infrastructure):
+        with self.mutex_smart_infra:
+            self.smart_infrastructure.append(infrastructure)
 
     def add_event_listener(self, event_listener):
         with self.mutex_event_listeners:
@@ -256,22 +445,57 @@ class Application(object):
         with self.mutex_events:
             for e in self.events:
                 event_car = self.get_car(e["car_id"])
-                if e["car_id"] != car["car_id"] and\
-                   distance(self.get_car(e["car_id"])["sensors"], car["sensors"]) <= 0.2:
+                if distance(event_car["sensors"], car["sensors"]) <= 0.2:
                     events.append(e)
 
         return events
+
+    def fetch_si_status(self, infra, car):
+        car_road = car["road"]
+        is_red = infra.is_red(car)
+        lat = infra.latitude
+        lon = infra.longitude
+        if is_red:
+            state = "red"
+        else:
+            state = "green"
+        status = {}
+        status['id'] = int(infra.id)
+        status['longitude'] = lon
+        status['latitude'] = lat
+        status['state'] = state
+
+        return status
+
+    def fetch_smart_infrastructure(self, car):
+        infrastructure = []
+
+        with self.mutex_smart_infra:
+            for infra in self.smart_infrastructure:
+                location = {}
+                location["longitude"] = infra.longitude
+                location["latitude"] = infra.latitude
+                d = distance(location, car["sensors"])
+                if d <= 0.2 and infra.on_route(car):
+                    infrastructure.append(self.fetch_si_status(infra, car))
+
+        return infrastructure
 
     def update_metadata(self, data):
         lat = float(data["sensors"]["latitude"])
         lon = float(data["sensors"]["longitude"])
         r = requests.get("http://maps.googleapis.com/maps/api/geocode/json?latlng=" + `lat` + "," + `lon` + "&sensor=true")
         metadata = r.json()
-        address_components = metadata["results"][0]["address_components"]
         road = "Unknown"
-        for component in address_components:
-            if "route" in component["types"]:
-                road = component["long_name"]
+        try:
+            if len(metadata["results"]) > 0:
+                address_components = metadata["results"][0]["address_components"]
+                road = "Unknown"
+                for component in address_components:
+                    if "route" in component["types"]:
+                        road = component["long_name"]
+        except:
+            pass
         # Add the metadata to the car information.
         data["road"] = road
 
@@ -300,11 +524,13 @@ class Application(object):
             car = self.get_car(car_id)
             other_cars = self.fetch_other_cars(car)
             events = self.fetch_events(car)
+            infrastructure = self.fetch_smart_infrastructure(car)
             # Prepare the structure to be JSONified.
             data = {}
             data["car"] = car
             data["other_cars"] = other_cars
             data["events"] = events
+            data["smart_infrastructure"] = infrastructure
             # Prepare the response.
             resp = Response(json.dumps(data))
             resp.headers['Access-Control-Allow-Origin'] = '*'
@@ -330,6 +556,15 @@ def main():
                                                                  cars_mutex=application.mutex_cars,
                                                                  events=application.events,
                                                                  events_mutex=application.mutex_events))
+    application.add_event_listener(EmergencyTrafficLightStopEventListener(cars=application.cars,
+                                                              cars_mutex=application.mutex_cars,
+                                                              events=application.events,
+                                                              events_mutex=application.mutex_events,
+                                                              smart_infrastructure=application.smart_infrastructure,
+                                                              smart_infra_mutex=application.mutex_smart_infra))
+    # Add smart infrastructure.
+    traffic_light = SmartTrafficLight(id=1, latitude=46.234525, longitude=6.0482579, route_a="Route A Einstein", route_b="Route Rutherford", url="http://localhost:5001/state")
+    application.add_smart_infrastructure(traffic_light)
     # Run the application.
     application.run()
 

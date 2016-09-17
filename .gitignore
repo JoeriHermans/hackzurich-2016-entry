@@ -1,0 +1,9 @@
+CarAppHackZurich/*.iml
+CarAppHackZurich/.gradle
+CarAppHackZurich/local.properties
+CarAppHackZurich/.idea/workspace.xml
+CarAppHackZurich/.idea/libraries
+CarAppHackZurich/.DS_Store
+CarAppHackZurich/build
+CarAppHackZurich/captures
+CarAppHackZurich/.externalNativeBuild

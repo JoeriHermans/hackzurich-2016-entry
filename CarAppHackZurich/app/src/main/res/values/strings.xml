@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">CarAppHackZurich</string>
+    <string name="accelerometer">ACCELEROMETER</string>
+    <string name="gravity">GRAVITY</string>
+    <string name="gyroscope">GYROSCOPE</string>
+    <string name="gyroscope_uncalibrated">GYROSCOPE_UNCALIBRATED</string>
+    <string name="linear_acceleration">LINEAR_ACCELERATION</string>
+    <string name="rotation_vector">ROTATION_VECTOR</string>
+    <string name="significant_motion">SIGNIFICANT_MOTION</string>
+    <string name="magnetometer">MAGNETOMETER</string>
+    <string name="magnetometer_un">MAGNETOMETER_uncalibrated</string>
+    <string name="carid">Car ID</string>
+    <string name="cartype">Car Type</string>
+    <string name="StarSensorService">Star Sensor Service</string>
+    <string name="StopSensorService">Stop Sensor Service</string>
+    <string name="DisplaySensors">Display Sensors</string>
+    <string name="WebView">Web View</string>
+    <string name="GPS">GPS Location</string>
+    <string name="Emergency">Emergency</string>
+</resources>
