@@ -97,16 +97,12 @@ class CrashEventListener(EventListener):
         timestamp = float(update["timestamp"])
         expiration_timestamp = timestamp + self.event_timeout
         car_id = int(update["car_id"])
-        latitude = float(update["sensors"]["latitude"])
-        longitude = float(update["sensors"]["longitude"])
         # Build an event using a dictionary.
         event = {}
         event["event_type"] = event_type
         event["timestamp"] = timestamp
         event["expiration_timestamp"] = expiration_timestamp
         event["car_id"] = car_id
-        event["latitude"] = latitude
-        event["longitude"] = longitude
 
         return event
 
