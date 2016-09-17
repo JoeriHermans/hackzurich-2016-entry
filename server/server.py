@@ -100,8 +100,6 @@ class EmergencyTrafficLightStopEventListener(EventListener):
                 if stopping_distance >= (distance_to_intersection + 0.5):
                     event = self.create_event(update, traffic_light)
 
-        print(event)
-
         return event
 
 class EmergencyServiceEventListener(EventListener):
