@@ -26,7 +26,7 @@ var carsColors = {
     fill: '#008000',
     stroke: '#005e00'
   },
-  crashed: {
+  crash: {
     fill: '#c03636',
     stroke: '#d53333'
   },
@@ -52,7 +52,7 @@ var events = {
  */
 function refreshInfo (info) {
   $('.info-panel-wrapper .id span').html(info.car.car_id);
-  $('.info-panel-wrapper .speed span').html(info.car.sensors.speed.toFixed(1));
+  $('.info-panel-wrapper .speed span').html(info.car.sensors.speed.toFixed(1)/2);
   $('.info-panel-wrapper .type span').html(carTypes[info.car.car_type]);
   $('.info-panel-wrapper .acceleration span').html(info.car.sensors.acceleration_x.toFixed(0)/100);
 
@@ -134,8 +134,8 @@ function drawCar (longitude, latitude, type, events, car_id, in_emergency) {
     if (events[i].car_id == car_id) {
       found = true;
 
-      if (events[i].event_type == 'crash' && car_id == myId) {
-        type = 'crashed';
+      if (events[i].event_type == 'crash') {
+        type = 'crash';
       } else if (events[i].event_type == 'emergency_stop_others') {
         type = 'emergency_stop_others';
       } else if (events[i].event_type == 'emergency_alert') {
@@ -168,6 +168,15 @@ function drawCar (longitude, latitude, type, events, car_id, in_emergency) {
     });
     _.find(cars, { car_id : car_id }).in_emergency = in_emergency;
     _.find(cars, { car_id : car_id }).type = type;
+
+    _.find(cars, { car_id : car_id }).setIcon({
+      path: google.maps.SymbolPath.CIRCLE,
+      fillColor: carsColors[type].fill,
+      fillOpacity: 0.9,
+      scale: 10,
+      strokeColor: carsColors[type].stroke,
+      strokeWeight: 3
+    });
   } else {
     cars.push(new google.maps.Marker({
       car_id: car_id,
