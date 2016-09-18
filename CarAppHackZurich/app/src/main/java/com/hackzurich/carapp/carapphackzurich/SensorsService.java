@@ -160,7 +160,8 @@ public class SensorsService extends Service implements SensorEventListener, Loca
         final String url = Link;
         try {
             j = new JSONObject(s);
-            Log.i("JSON", s);
+            DisplayLoggingInfo(j.toString());
+//            Log.i("JSON", s);
         } catch(Exception e) {
             e.printStackTrace();
         }
@@ -248,17 +249,18 @@ public class SensorsService extends Service implements SensorEventListener, Loca
 
     }
 
-    private void DisplayLoggingInfo() {
+    private void DisplayLoggingInfo(String json) {
 //        Log.d(TAG, "entered DisplayLoggingInfo");
-        intent.putExtra("TYPE_ACCELEROMETER", tvAccel.toString());
-        intent.putExtra("TYPE_GYROSCOPE", tvGyro.toString());
-        intent.putExtra("TYPE_GYROSCOPE_UNCALIBRATED", tvGyroUn.toString());
-        intent.putExtra("TYPE_GRAVITY", tvGravity.toString());
-        intent.putExtra("TYPE_MAGNETIC_FIELD", tvMagnitometer);
-        intent.putExtra("TYPE_MAGNETIC_FIELD_UNCALIBRATED", tvMagnitometerUn);
-        intent.putExtra("TYPE_LINEAR_ACCELERATION", tvLinearAccel.toString());
-        intent.putExtra("TYPE_ROTATION_VECTOR", tvRotationVector.toString());
-        intent.putExtra("GPS", sLongitude + "\n" + sLatitude + "\n" + sSpeed);
+//        intent.putExtra("TYPE_ACCELEROMETER", tvAccel.toString());
+//        intent.putExtra("TYPE_GYROSCOPE", tvGyro.toString());
+//        intent.putExtra("TYPE_GYROSCOPE_UNCALIBRATED", tvGyroUn.toString());
+//        intent.putExtra("TYPE_GRAVITY", tvGravity.toString());
+//        intent.putExtra("TYPE_MAGNETIC_FIELD", tvMagnitometer);
+//        intent.putExtra("TYPE_MAGNETIC_FIELD_UNCALIBRATED", tvMagnitometerUn);
+//        intent.putExtra("TYPE_LINEAR_ACCELERATION", tvLinearAccel.toString());
+//        intent.putExtra("TYPE_ROTATION_VECTOR", tvRotationVector.toString());
+//        intent.putExtra("GPS", sLongitude + "\n" + sLatitude + "\n" + sSpeed);
+        intent.putExtra("JSON", json);
         sendBroadcast(intent);
     }
 

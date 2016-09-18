@@ -163,14 +163,15 @@ public class MainActivity extends Activity {
 
     private void updateLogArea(Intent intent){
         tvLogArea.setText("");
-        tvLogArea.setText("TYPE_ACCELEROMETER: " + intent.getStringExtra("TYPE_ACCELEROMETER") + "\n\n"
-                + "TYPE_GYROSCOPE: " + intent.getStringExtra("TYPE_GYROSCOPE") + "\n\n"
-                + "TYPE_GYROSCOPE_UNCALIBRATED: " + intent.getStringExtra("TYPE_GYROSCOPE_UNCALIBRATED") + "\n\n"
-                + "TYPE_MAGNETIC_FIELD: " + intent.getStringExtra("TYPE_MAGNETIC_FIELD") + "\n\n"
-                + "TYPE_MAGNETIC_FIELD_UNCALIBRATED: " + intent.getStringExtra("TYPE_MAGNETIC_FIELD_UNCALIBRATED") + "\n\n"
-                + "TYPE_LINEAR_ACCELERATION: " + intent.getStringExtra("TYPE_LINEAR_ACCELERATION") + "\n\n"
-                + "TYPE_ROTATION_VECTOR: " + intent.getStringExtra("TYPE_ROTATION_VECTOR") + "\n\n"
-                + "GPS: \n" + intent.getStringExtra("GPS") + "\n");
+//        tvLogArea.setText("TYPE_ACCELEROMETER: " + intent.getStringExtra("TYPE_ACCELEROMETER") + "\n\n"
+//                + "TYPE_GYROSCOPE: " + intent.getStringExtra("TYPE_GYROSCOPE") + "\n\n"
+//                + "TYPE_GYROSCOPE_UNCALIBRATED: " + intent.getStringExtra("TYPE_GYROSCOPE_UNCALIBRATED") + "\n\n"
+//                + "TYPE_MAGNETIC_FIELD: " + intent.getStringExtra("TYPE_MAGNETIC_FIELD") + "\n\n"
+//                + "TYPE_MAGNETIC_FIELD_UNCALIBRATED: " + intent.getStringExtra("TYPE_MAGNETIC_FIELD_UNCALIBRATED") + "\n\n"
+//                + "TYPE_LINEAR_ACCELERATION: " + intent.getStringExtra("TYPE_LINEAR_ACCELERATION") + "\n\n"
+//                + "TYPE_ROTATION_VECTOR: " + intent.getStringExtra("TYPE_ROTATION_VECTOR") + "\n\n"
+//                + "GPS: \n" + intent.getStringExtra("GPS") + "\n");
+        tvLogArea.setText(intent.getStringExtra("JSON"));
 
 
     }
