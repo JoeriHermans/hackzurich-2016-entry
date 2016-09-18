@@ -472,11 +472,12 @@ class Application(object):
 
         with self.mutex_smart_infra:
             for infra in self.smart_infrastructure:
+                print(infra)
                 location = {}
                 location["longitude"] = infra.longitude
                 location["latitude"] = infra.latitude
                 d = distance(location, car["sensors"])
-                if d <= 0.2 and infra.on_route(car):
+                if d <= 10000 and infra.on_route(car):
                     infrastructure.append(self.fetch_si_status(infra, car))
 
         return infrastructure
@@ -551,7 +552,7 @@ def main():
     application.add_car(1) # Przemek
     application.add_car(2) # Joeri
     # Add event listeners.
-    application.add_event_listener(CrashEventListener(crash_tolerance=4))
+    application.add_event_listener(CrashEventListener(crash_tolerance=50))
     application.add_event_listener(EmergencyServiceEventListener(cars=application.cars,
                                                                  cars_mutex=application.mutex_cars,
                                                                  events=application.events,
@@ -563,7 +564,7 @@ def main():
                                                               smart_infrastructure=application.smart_infrastructure,
                                                               smart_infra_mutex=application.mutex_smart_infra))
     # Add smart infrastructure.
-    traffic_light = SmartTrafficLight(id=1, latitude=47.389448, longitude=8.516312, route_a="Route A Einstein", route_b="Route Rutherford", url="http://localhost:5001/state")
+    traffic_light = SmartTrafficLight(id=1, latitude=47.389448, longitude=8.516312, route_a="Technoparkstrasse", route_b="Schiffbaustrasse", url="http://localhost:5001/state")
     application.add_smart_infrastructure(traffic_light)
     # Run the application.
     application.run()
